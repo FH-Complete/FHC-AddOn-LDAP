@@ -54,6 +54,10 @@ class ldap
 			}
 		}
 
+		// Wenn Passwort leer ist liefert ldap_bind immer true deshalb wird dies abgefangen
+		if($ldap_bind_user!='' && $ldap_bind_password=='')
+			return false;
+
 		if(!$result=@ldap_bind($this->ldap_conn, $ldap_bind_user, $ldap_bind_password))
 		{
 			if(ldap_errno($this->ldap_conn)==49) // Passwort falsch
