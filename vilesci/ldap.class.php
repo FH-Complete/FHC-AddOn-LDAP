@@ -104,8 +104,35 @@ class ldap
 			return $entry[0]['dn'];
 		}
 	}
+    
+    /**
+	 * Prüft ob eine UID-Nummer noch frei ist
+	 * Wenn diese noch frei ist, wird true zurückgeliefert, ansonsten false
+	 * @param $uidNumber zu prüfende UID-Nummer
+	 */
+	public function CheckUidNumber($uidNumber, $base_dn=LDAP_BASE_DN)
+	{
+		if (($res_id = ldap_search($this->ldap_conn, $base_dn, "uidNumber=".$uidNumber)) == false)
+		{
+			$this->errormsg='LDAP Suche fehlgeschlagen';
+			return null;
+		}
+
+		if (ldap_count_entries($this->ldap_conn, $res_id) >= 1)
+		{
+			// zumindest 1 Suchergebnis
+			$this->errormsg='UID-Nummer vergeben';
+			return false;
+		}
+
+		if (ldap_count_entries($this->ldap_conn, $res_id) == 0)
+		{
+			// UID-Nummer noch frei
+			return true;
+		}
+	}
 	
-	/**
+    /**
 	 * Fuegt einen User zu einer LDAP Gruppe hinzu
 	 * @param $group_dn DN der Gruppe (zB "cn=systementwicklung,dc=technikum-wien,dc=at")
 	 * @param $username UID des Users
