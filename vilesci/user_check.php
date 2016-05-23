@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  *
- * Authors: Andreas Oesterreicher <andreas.oesterreicher@technikum-wien.at> 
+ * Authors: Andreas Oesterreicher <andreas.oesterreicher@technikum-wien.at>
  *
  */
 /**
@@ -38,8 +38,8 @@ $ldap = new ldap();
 if(!$ldap->connect('starttls')) // (starttls | ldaps | plain)
 	die($ldap->errormsg);
 
-$qry = "SELECT  
-			vorname, nachname, uid, gebdatum, (SELECT matrikelnr FROM public.tbl_student WHERE student_uid=tbl_benutzer.uid) as matrikelnr
+$qry = "SELECT
+			vorname, nachname, uid, gebdatum
 		FROM
 			public.tbl_benutzer
 			JOIN public.tbl_person USING(person_id)
@@ -60,7 +60,6 @@ if($result = $db->db_query($qry))
 		$user['nachname']=$row->nachname;
 		$user['uid']=$row->uid;
 		$user['gebdatum']=$row->gebdatum;
-		$user['matrikelnr']=$row->matrikelnr;
 
 		//Suchen ob der User bereits vorhanden ist
 		if(!$dn = $ldap->GetUserDN($row->uid))
