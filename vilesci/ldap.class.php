@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  *
- * Authors: Andreas Oesterreicher <andreas.oesterreicher@technikum-wien.at> 
+ * Authors: Andreas Oesterreicher <andreas.oesterreicher@technikum-wien.at>
  *
  */
 
@@ -104,7 +104,7 @@ class ldap
 			return $entry[0]['dn'];
 		}
 	}
-    
+
     /**
 	 * Prüft ob eine UID-Nummer noch frei ist
 	 * Wenn diese noch frei ist, wird true zurückgeliefert, ansonsten false
@@ -131,17 +131,17 @@ class ldap
 			return true;
 		}
 	}
-	
+
     /**
 	 * Fuegt einen User zu einer LDAP Gruppe hinzu
 	 * @param $group_dn DN der Gruppe (zB "cn=systementwicklung,dc=technikum-wien,dc=at")
 	 * @param $username UID des Users
 	 */
 	public function AddGroupMember($group_dn, $username)
-	{	
+	{
 		$data = array('memberUID' => $username);
 
-		if(ldap_mod_add ($this->ldap_conn, $group_dn, $data)) 
+		if(ldap_mod_add ($this->ldap_conn, $group_dn, $data))
 		    return true;
 		else
 		{
@@ -156,10 +156,10 @@ class ldap
 	 * @param $username UID des Users
 	 */
 	public function DeleteGroupMember($group_dn, $username)
-	{	
+	{
 		$data = array('memberUID' => $username);
 
-		if(ldap_mod_del ($this->ldap_conn, $group_dn, $data)) 
+		if(ldap_mod_del ($this->ldap_conn, $group_dn, $data))
 		    return true;
 		else
 		{
@@ -174,8 +174,8 @@ class ldap
 	 * @param $data object mit den Daten die geaendert werden sollen
 	 */
 	public function Modify($dn, $data)
-	{	
-		if(ldap_modify($this->ldap_conn, $dn, $data)) 
+	{
+		if(ldap_modify($this->ldap_conn, $dn, $data))
 		    return true;
 		else
 		{
@@ -245,7 +245,19 @@ class ldap
 		}
 
 		$entry = ldap_get_entries($this->ldap_conn, $res_id);
-		return $entry;		
+		return $entry;
+	}
+
+	public function getEntry($user, $entry)
+	{
+		if(($res_id = ldap_search($this->ldap_conn, LDAP_BASE_DN, LDAP_USER_SEARCH_FILTER.'='.$user, array($entry))) == false)
+		{
+			$this->errormsg='LDAP Suche fehlgeschlagen';
+			return false;
+		}
+
+		$entry = ldap_get_entries($this->ldap_conn, $res_id);
+		return $entry;
 	}
 }
 
