@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  *
- * Authors: Andreas Oesterreicher <andreas.oesterreicher@technikum-wien.at> 
+ * Authors: Andreas Oesterreicher <andreas.oesterreicher@technikum-wien.at>
  *
  */
 /**
@@ -38,13 +38,13 @@ if(!$ldap->connect('starttls'))
 	die($ldap->errormsg);
 
 
-$qry = "SELECT  
-			vorname, nachame, uid
+$qry = "SELECT
+			vorname, nachname, uid
 		FROM
 			public.tbl_benutzer
 			JOIN public.tbl_person USING(person_id)
 		WHERE
-			aktiv";
+			tbl_benutzer.aktiv";
 
 if($result = $db->db_query($qry))
 {
@@ -97,7 +97,7 @@ if($result = $db->db_query($qry))
 			{
 
 				/* Nur fuer Active Directory
-					
+
 				// Moegliche Fehlerquellen beim setzten des Passworts:
 				// - Richtigen BIND User verwenden
 				// - im AD muss das setzen des Passwortes aktiviert sein
@@ -106,7 +106,7 @@ if($result = $db->db_query($qry))
 				// - Passwort muss der Passwort Policy des AD entsprechen (Sonderzeichen, Gross-/Kleinschreibung etc, mind. 6 Zeichen)
 				// - Passwort muss korrekt UTF16LE kodiert sein und unter doppelten Hochkomma stehen
 
-				// Useraccountcontrol gibt den Status des Accounts an. 
+				// Useraccountcontrol gibt den Status des Accounts an.
 				// Per default sind diese deaktiviert (514)
 				// 512 = Normal Account
 				// 66048 = Aktiv, Passwort lauft nicht ab
@@ -120,7 +120,7 @@ if($result = $db->db_query($qry))
 					echo "<br>Fehler beim Setzten von UserAccountControl und Passwort von $row->uid: ".$ldap->errormsg;
 					continue;
 				}
-				*/					
+				*/
 
 				echo "<br>$row->uid erfolgreich angelegt";
 			}
@@ -128,14 +128,14 @@ if($result = $db->db_query($qry))
 
 		//Gruppenzuordnungen
 		/*
-		$qry = "SELECT 
-					distinct gruppe_kurzbz 
-				FROM 
-					public.tbl_benutzergruppe 
+		$qry = "SELECT
+					distinct gruppe_kurzbz
+				FROM
+					public.tbl_benutzergruppe
 					JOIN public.tbl_gruppe USING(gruppe_kurzbz)
-				WHERE 
+				WHERE
 					uid=".$db->db_add_param($row->uid)."
-					AND tbl_gruppe.aktiv";			
+					AND tbl_gruppe.aktiv";
 
 		if($result_gruppe = $db->db_query($qry))
 		{
@@ -143,7 +143,7 @@ if($result = $db->db_query($qry))
 			{
 				// Bei Gruppenzuordnungen wird der User zur Gruppe hinzugefuegt
 				// nicht umgekehrt!
-				// Group DN muss angepasst werden! 
+				// Group DN muss angepasst werden!
 				$group_dn = "cn=$row->gruppe_kurzbz,ou=Group,dc=academic,dc=local";
 				if($ldap->AddGroup($group_dn,$row->uid))
 					echo "\n<br>Gruppe hinzugefuegt";
