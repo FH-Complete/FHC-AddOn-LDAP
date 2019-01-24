@@ -22,9 +22,8 @@
 class ldap
 {
 	public $ldap_conn;
-	public $debug=false;
-	public $errormsg='';
-
+	public $debug = false;
+	public $errormsg = '';
 
 	/**
 	 * Stellt eine Verbindung zum LDAP Directory her
@@ -40,7 +39,40 @@ class ldap
 		if($this->debug)
 			ldap_set_option(NULL, LDAP_OPT_DEBUG_LEVEL,7);
 
-		$this->ldap_conn = ldap_connect($ldap_server, $ldap_port);
+		// Quick check if the Host is Up
+		// Otherwise try next Host from Round-Robin List if available
+		$hostlist = $this->getHosts($ldap_server);
+		$host = false;
+		$this->debug("Availability check ".print_r($hostlist,true));
+		if(is_array($hostlist))
+		{
+			foreach ($hostlist as $k => $host)
+			{
+				if ($this->serviceping($host, $ldap_port) == true)
+				{
+					$this->debug("LDAP Serviceping $host success");
+					break;
+				}
+				else
+				{
+					$this->debug("LDAP Serviceping $host failed");
+					$host = false;
+				}
+			}
+		}
+		else
+		{
+			$this->debug("Unable to find Hosts for Hostname");
+		}
+
+
+		if (!$host)
+		{
+			$this->erorrmsg = 'Fehler beim Verbinden zum LDAP Server';
+			return false;
+		}
+
+		$this->ldap_conn = ldap_connect($host, $ldap_port);
 
 	    ldap_set_option($this->ldap_conn, LDAP_OPT_PROTOCOL_VERSION, 3);
 	    ldap_set_option($this->ldap_conn, LDAP_OPT_REFERRALS, 0);
@@ -69,6 +101,47 @@ class ldap
 		return true;
 	}
 
+	/**
+	 * Get List of all Hosts for this LDAP Server if there are more (round-robin)
+	 * @param $ldap_server
+	 * @return array of hosts
+	 */
+	public function getHosts($ldap_server)
+	{
+		$ldapinfo = parse_url($ldap_server);
+		if(isset($ldapinfo['host']))
+			$host = $ldapinfo['host'];
+		elseif(isset($ldapinfo['path']))
+			$host = $ldapinfo['path'];
+		else
+			$host = $ldap_server;
+
+		$hostlist = gethostbynamel($host);
+		return $hostlist;
+	}
+
+	/**
+	 * Opens a Connection to a LDAP Server to see if it is Up
+	 * @param $host Hostname
+	 * @param $port Port
+	 * @param timeout Timeout
+	 * @return true if available, false on failure
+	 */
+	public function serviceping($host, $port = 389, $timeout = 1)
+	{
+		$op = @fsockopen($host, $port, $errno, $errstr, $timeout);
+		if (!$op)
+		{
+			 //this ldap is down
+			return false;
+		}
+		else
+		{
+			fclose($op);
+			//DC is up & running, we can safely connect with ldap_connect
+			return true;
+		}
+	}
 
 	/**
 	 * Sucht einen User im LDAP
