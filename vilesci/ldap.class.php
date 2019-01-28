@@ -39,32 +39,11 @@ class ldap
 		if($this->debug)
 			ldap_set_option(NULL, LDAP_OPT_DEBUG_LEVEL,7);
 
-		// Quick check if the Host is Up
-		// Otherwise try next Host from Round-Robin List if available
-		$hostlist = $this->getHosts($ldap_server);
-		$host = false;
-		$this->debug("Availability check ".print_r($hostlist,true));
-		if(is_array($hostlist))
+		$host = $this->parseHostname($ldap_server);
+		if($this->serviceping($host, $ldap_port) != true)
 		{
-			foreach ($hostlist as $k => $host)
-			{
-				if ($this->serviceping($host, $ldap_port) == true)
-				{
-					$this->debug("LDAP Serviceping $host success");
-					break;
-				}
-				else
-				{
-					$this->debug("LDAP Serviceping $host failed");
-					$host = false;
-				}
-			}
+			$host = $this->getActiveHost($ldap_server, $ldap_port);
 		}
-		else
-		{
-			$this->debug("Unable to find Hosts for Hostname");
-		}
-
 
 		if (!$host)
 		{
@@ -102,11 +81,12 @@ class ldap
 	}
 
 	/**
-	 * Get List of all Hosts for this LDAP Server if there are more (round-robin)
-	 * @param $ldap_server
-	 * @return array of hosts
+	 * Parses the Hostname from LDAP Server list.
+	 *
+	 * @param $ldap_server LDAP Server Adress
+	 * @return Hostname of Server without protocol
 	 */
-	public function getHosts($ldap_server)
+	public function parseHostname($ldap_server)
 	{
 		$ldapinfo = parse_url($ldap_server);
 		if(isset($ldapinfo['host']))
@@ -116,6 +96,57 @@ class ldap
 		else
 			$host = $ldap_server;
 
+		return $host;
+	}
+
+	/**
+	 * Tries to find the next available LDAP Server from the DNS List
+	 * and returns the hostname
+	 *
+	 * @param $ldap_server Hostname of LDAP Server
+	 * @param $ldap_port PORT of LDAP Server
+	 * @return Hostname of next active LDAP Server
+	 */
+	public function getActiveHost($ldap_server, $ldap_port)
+	{
+		$this->debug("LDAP Server not responding. try next");
+		// Quick check if the Host is Up
+		// Otherwise try next Host from Round-Robin List if available
+		$hostlist = $this->getHosts($ldap_server);
+		$host = false;
+
+		if(is_array($hostlist))
+		{
+			foreach ($hostlist as $k => $host)
+			{
+				$host = gethostbyaddr($host);
+				if ($this->serviceping($host, $ldap_port) == true)
+				{
+					$this->debug("LDAP Serviceping $host success");
+					return $host;
+				}
+				else
+				{
+					$this->debug("LDAP Serviceping $host failed");
+					$host = false;
+				}
+			}
+		}
+		else
+		{
+			$this->debug("Unable to find Hosts for Hostname");
+		}
+		return false;
+	}
+
+	/**
+	 * Get List of all Hosts for this LDAP Server if there are more (round-robin)
+	 * @param $ldap_server
+	 * @return array of hosts
+	 */
+	public function getHosts($ldap_server)
+	{
+		$host = $this->parseHostname($ldap_server);
 		$hostlist = gethostbynamel($host);
 		return $hostlist;
 	}
