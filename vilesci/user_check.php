@@ -69,8 +69,8 @@ if($result = $db->db_query($qry))
 			$vorhanden[]=$user;
 	}
 }
-echo '<br>Vorhanden: '.count($vorhanden);
-echo '<br>Fehlend:'.count($fehlend);
+echo '<br>Vorhanden: '.numberOfElements($vorhanden);
+echo '<br>Fehlend:'.numberOfElements($fehlend);
 echo '<br><br>';
 var_dump($fehlend);
 
