@@ -39,6 +39,8 @@ class ldap
 		if($this->debug)
 			ldap_set_option(NULL, LDAP_OPT_DEBUG_LEVEL,7);
 
+		$host = $ldap_server;
+
 		if(!defined('LDAP_SERVICEPING') || LDAP_SERVICEPING)
 		{
 			$host = $this->parseHostname($ldap_server);
@@ -49,17 +51,15 @@ class ldap
 
 			if (!$host)
 			{
-				$this->erorrmsg = 'Fehler beim Verbinden zum LDAP Server';
+				$this->errormsg = 'Fehler beim Verbinden zum LDAP Server';
 				return false;
 			}
 		}
-		else
-			$host = $ldap_server;
 
-		$this->ldap_conn = ldap_connect($host, $ldap_port);
+		$this->ldap_conn = ldap_connect('ldap://'.$host.':'.$ldap_port);
 
-	    ldap_set_option($this->ldap_conn, LDAP_OPT_PROTOCOL_VERSION, 3);
-	    ldap_set_option($this->ldap_conn, LDAP_OPT_REFERRALS, 0);
+		ldap_set_option($this->ldap_conn, LDAP_OPT_PROTOCOL_VERSION, 3);
+		ldap_set_option($this->ldap_conn, LDAP_OPT_REFERRALS, 0);
 
 		if($starttls)
 		{
